@@ -1,0 +1,103 @@
+---
+title: "facial Recognition ORL dataset"
+author: "BERRIMI Mohamed"
+date: "April 29, 2018"
+output: html_document
+---
+
+```{r}
+setwd("~/Desktop/ML-R/ORL")
+## orl.csv is resizble version of ORl images dataset (25 X 25.8), converted to pixels // les détails de transofrmation des images est dans le rapport .
+
+Orldataset = read.csv('orl.csv')
+
+
+str(Orldataset)
+# dimension de dataset
+dim(Orldataset)
+#split the data
+library(caTools)
+set.seed(123)
+split = sample.split(Orldataset$label, SplitRatio = 0.8)
+training_set = subset(Orldataset, split == TRUE)
+test_set = subset(Orldataset, split == FALSE)
+#dimension d'ensemble de Test 
+dim(test_set)
+# dimension d'ensemble d'apprentissage 
+dim(training_set)
+#-------------------------------------#
+
+#KNN
+library(class)
+attach(Orldataset)
+Knn_Model = knn(train = training_set[, -645],
+             test = test_set[, -645],
+             cl = training_set[, 645],
+             k = 5,
+             prob = TRUE)
+
+Confus_matrix = table(test_set[, 645], Knn_Model)
+
+
+
+Knn_Model!=label
+
+
+table(Knn_Model==test_set$label)
+# 7 classifications sont Faux , 73 sont Vrais 
+
+######################## Rpart
+library(rpart)
+library(rpart.plot)
+
+RpartClassifier = rpart(formula = as.factor(label) ~ .,
+                        data = training_set, method="class" )
+y_pred = predict(RpartClassifier,newdata = test_set[-645])
+ 
+# Making the Confusion Matrix
+
+ 
+plot(RpartClassifier,uniform = TRUE)
+text(RpartClassifier,all=TRUE)
+rpart.plot(RpartClassifier,box.palette=0 ,trace=-1)
+summary(RpartClassifier)
+
+
+
+#########  C50
+library(C50)
+classifier3 <- C5.0(as.factor(label)~ .,data=training_set )
+
+#la taille d'arbre 
+
+#statistics sur classifieur C50 
+summary(classifier3)
+
+
+######### Random Forest
+library(randomForest)
+set.seed(415)
+RandFrst <- randomForest(label ~ .,
+                         data=training_set, 
+                         ntree=200)
+
+plot(RandFrst)
+summary(RandFrst)
+# Change le nombres d'arbres
+
+RandFrst <- randomForest(label ~ .,
+                         data=training_set, 
+                         ntree=500)
+plot(RandFrst)
+####### Naive Bayes
+library(e1071)
+
+naiveBayesClassifier <- naiveBayes(label ~ . , data = training_set)
+NaivePred = predict(naiveBayesClassifier , test_set[-645])
+summary(naiveBayesClassifier)
+
+
+
+```
+
+ 
